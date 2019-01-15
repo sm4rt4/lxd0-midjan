@@ -532,7 +532,7 @@ router.post('/start-local', passport.authenticate('jwt', { session: false }), (r
         ], (err, doc) => {
             if (err) return res.json({ success: false, error: err });
 
-            return res.json({ success: true, gameId, color: doc.n });
+            return res.json({ success: true, gameId, color: doc == null ? 8 : doc.n });
         });
     } catch (e) {
         console.log(e);
