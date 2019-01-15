@@ -651,7 +651,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
             },
             (callback) => {
                 if (rType == 0) {
-                    User.count({ role: 2 }, (err, count) => {
+                    User.countDocuments({ role: 2 }, (err, count) => {
                         if (err) callback('Error updating data');
                         else Prop.updateN(cType == 0 ? 'V' : 'D', amount * values.coinRate * count, callback);
                     });

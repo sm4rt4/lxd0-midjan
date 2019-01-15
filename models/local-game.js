@@ -37,7 +37,7 @@ module.exports.add = (gameData, callback) => {
 
 // verify owner
 module.exports.verifyOwner = (_id, phone, callback) => {
-    LocalGame.count({ _id, phone }, (err, count) => {
+    LocalGame.countDocuments({ _id, phone }, (err, count) => {
         if (err || count != 1) callback('Bad Request');
         callback(null);
     });
