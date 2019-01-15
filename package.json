@@ -1,0 +1,31 @@
+{
+  "name": "ludo-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "enter.js",
+  "scripts": {
+    "start": "node enter.js",
+    "server": "nodemon enter.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.4",
+    "fs-extra": "^7.0.0",
+    "jsonwebtoken": "^8.3.0",
+    "moment": "^2.23.0",
+    "mongoose": "^5.3.3",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "randomstring": "^1.1.5",
+    "socket.io": "^2.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.4"
+  }
+}
