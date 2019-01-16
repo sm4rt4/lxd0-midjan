@@ -55,6 +55,10 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 const betKinds = [ 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 50000000, 1000000000 ];
+const botTurnWait = {
+    min: 0,
+    max: 2
+};
 
 io.on('connection', (socket) => {
     console.log('User Connected ' + socket.id);
@@ -844,7 +848,7 @@ function setStartTimer(gameId, t) {
             if (games[gameId].botIndex == games[gameId].turn) {
                 setTimeout(() => {
                     onDiceRoll(null, games[gameId].bid);
-                }, 1000 * functions.getRandomNumber(3, 7));
+                }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
             }
         }  catch (e) {
             console.log(e);
@@ -876,9 +880,11 @@ function setRollTimer(gameId, t) {
                             let winnerIndex, winnerPhone;
 
                             for (let k = 0; k < games[gameId].players.length; k++) {
-                                if (games[gameId].out.indexOf(k) < 0) {
-                                    winnerIndex = k;
+                                if (games[gameId].out.indexOf(players[games[gameId].players[k]].game.index) < 0) {
+                                    winnerIndex = players[games[gameId].players[k]].game.index;
                                     winnerPhone = players[games[gameId].players[k]].phone;
+
+                                    break;
                                 }
                             }
 
@@ -952,7 +958,7 @@ function setRollTimer(gameId, t) {
                 if (games[gameId].botIndex == games[gameId].turn) {
                     setTimeout(() => {
                         onDiceRoll(null, games[gameId].bid);
-                    }, 1000 * functions.getRandomNumber(3, 7));
+                    }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                 }
             }  catch (e) {
                 console.log(e);
@@ -988,9 +994,12 @@ function setMoveTimer(gameId, t) {
                             let winnerIndex, winnerPhone;
 
                             for (let k = 0; k < games[gameId].players.length; k++) {
-                                if (games[gameId].out.indexOf(k) < 0) {
-                                    winnerIndex = k;
+                                // if (games[gameId].out.indexOf(k) < 0) {
+                                if (games[gameId].out.indexOf(players[games[gameId].players[k]].game.index) < 0) {                                
+                                    winnerIndex = players[games[gameId].players[k]].game.index;
                                     winnerPhone = players[games[gameId].players[k]].phone;
+
+                                    break;
                                 }
                             }
 
@@ -1071,7 +1080,7 @@ function setMoveTimer(gameId, t) {
                 if (games[gameId].botIndex == games[gameId].turn) {
                     setTimeout(() => {
                         onDiceRoll(null, games[gameId].bid);
-                    }, 1000 * functions.getRandomNumber(3, 7));
+                    }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                 }
             }, t);
         }  catch (e) {
@@ -1204,7 +1213,7 @@ function onDiceRoll(socket, bid) {
                         if (games[gameId].botIndex == games[gameId].turn && movables.length > 0) {
                             setTimeout(() => {
                                 onMove(null, games[gameId].bid, movables[functions.getRandomNumber(0, movables.length - 1)]);                                
-                            }, 1000 * functions.getRandomNumber(3, 7));
+                            }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                         }
                     } else {
                         for (let i = 0; i < games[gameId].players.length; i++) {
@@ -1216,7 +1225,7 @@ function onDiceRoll(socket, bid) {
                         if (games[gameId].botIndex == games[gameId].turn) {
                             setTimeout(() => {
                                 onDiceRoll(null, games[gameId].bid);
-                            }, 1000 * functions.getRandomNumber(3, 7));
+                            }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                         }
                     }
                 }  catch (e) {
@@ -1271,7 +1280,7 @@ function onMove(socket, bid, pieceIndex) {
                     if (games[gameId].botIndex == games[gameId].turn) {
                         setTimeout(() => {
                             onDiceRoll(null, games[gameId].bid);
-                        }, 1000 * functions.getRandomNumber(3, 7));
+                        }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                     }
                 }
             } else if (games[gameId].pieces[myIndex][pieceIndex] + games[gameId].lastOutcome <= 56) {
@@ -1411,7 +1420,7 @@ function onMove(socket, bid, pieceIndex) {
                     if (games[gameId].botIndex == games[gameId].turn) {
                         setTimeout(() => {
                             onDiceRoll(null, games[gameId].bid);
-                        }, 1000 * functions.getRandomNumber(3, 7));
+                        }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                     }
                 }, games[gameId].lastOutcome * 160);
                 //
@@ -1423,7 +1432,7 @@ function onMove(socket, bid, pieceIndex) {
 }
 
 let players = {};
-const botNames = ['Manish', 'Raju', 'Prince', 'Bittu', 'Jay'];
+const botNames = ['Kajal', 'Karina', 'Ramesh', 'Muskan', 'Dolly', 'Rani', 'Raghav', 'Ram', 'Shyam', 'Saif', 'Hema', 'Jasleen', 'Jasmin', 'Kamna', 'Alia', 'Abida', 'Aisha', 'Aafreen', 'Aalia', 'Adnan', 'Atif', 'Misbah', 'Salman', 'Shahid', 'Zaheer', 'Zakir', 'Imran', 'Umer', 'Wasim', 'Khalid', 'Walid', 'Mohammad', 'Yasin', 'Yakub', 'Shama', 'Sarfraz', 'Sameer', 'Armaan', 'Abdul', 'Hafiz', 'Arbaaz', 'Asad', 'Anwar', 'Hakim', 'Raju', 'Prince', 'Bittu', 'Jay', 'Mansoor'];
 function createBot() {
     const cTime = functions.getCurrentTime();
     
