@@ -537,7 +537,7 @@ io.on('connection', (socket) => {
 
                                     for (let p = 0; p < gameRequests.length; p++) {
                                         if (!gameRequests[p].open && gameRequests[p].tempId == tempId && gameRequests[p].players.indexOf(sockets[socket.id].id) < 0) {
-                                            const spRequest = gameRequests[i].specialIndex != -1 && !iAmSpecial;
+                                            const spRequest = gameRequests[p].specialIndex != -1 && !iAmSpecial;
                                             
                                             if (gameRequests[p].players.length == pCount) continue;
                                             
