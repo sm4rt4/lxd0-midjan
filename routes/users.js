@@ -515,8 +515,8 @@ router.post('/start-local', passport.authenticate('jwt', { session: false }), (r
 
         if (!functions.isArray(players) || (players.length != 2 && players.length != 4)) return res.json({ success: false, error: 'Bad Request 2' });
 
-        const localBetKinds = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
-        if (isNaN(bet) || localBetKinds.indexOf(bet) < 0) return res.json({ success: false, error: 'Invalid Bet Amount' });
+        // const localBetKinds = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+        if (isNaN(bet)/* || localBetKinds.indexOf(bet) < 0*/) return res.json({ success: false, error: 'Invalid Bet Amount' });
 
         const gameData = { phone, players, bet };
 
@@ -532,7 +532,7 @@ router.post('/start-local', passport.authenticate('jwt', { session: false }), (r
         ], (err, doc) => {
             if (err) return res.json({ success: false, error: err });
 
-            return res.json({ success: true, gameId, color: doc == null ? 8 : doc.n });
+            return res.json({ success: true, gameId, color: doc == null ? '-' : values.colors[doc.n] });
         });
     } catch (e) {
         console.log(e);
@@ -553,7 +553,7 @@ router.post('/local-result', passport.authenticate('jwt', { session: false }), (
 
         if (winner == undefined || gameId == undefined) return res.json({ success: false, error: 'Bad Request' });
 
-        if (isNaN(winner)) return res.json({ success: false, error: 'Bad Request' });
+        // if (isNaN(winner)) return res.json({ success: false, error: 'Bad Request' });
         
         async.waterfall([
             (callback) => LocalGame.verifyOwner(gameId, phone, callback),
