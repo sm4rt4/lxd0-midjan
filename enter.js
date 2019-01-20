@@ -1135,7 +1135,7 @@ function onDiceRoll(socket, bid) {
                         if (exCase == 2) {
                             appr = iAmSpecial ? [1, 2, 2, 3, 4, 4, 5, 6, 1, 1] : [6, 6, 1, 2, 3, 4, 5, 2, 5, 6];
                         } else if (very_close > 1) {
-                            appr = iAmSpecial ? [1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 1, 2, 5, 5, 6] : [6, 5, 1, 2, 6, 6, 3, 4, 5, 5, 6, 6, 6, 5];
+                            appr = iAmSpecial ? [1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 1, 2, 5, 5, 6, 1] : [6, 5, 1, 2, 6, 6, 3, 4, 5, 5, 6, 6, 6, 5, 1];
                         } else if (yet_to_open > 2) {
                             console.log('TC');
                             appr = [6, 6, 6, 1, 2, 3, 4, 5, 3, 4, 6, 6];
