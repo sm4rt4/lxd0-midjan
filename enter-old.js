@@ -1238,20 +1238,6 @@ function onDiceRoll(socket, bid) {
     }
 }
 
-// offsets
-const offsets = [
-    [0, -13, -26, -39],
-    [-39, 0, -13, -26],
-    [-26, -39, 0, -13],
-    [-13, -26, -39, 0]
-];
-const lOffsets = [
-    [0, 39, 26, 13],
-    [13, 0, 39, 26],
-    [26, 13, 0, 39],
-    [39, 26, 13, 0]
-];
-
 // mr = move request
 // mrc = move request completed
 // go = game over
@@ -1347,19 +1333,13 @@ function onMove(socket, bid, pieceIndex) {
 
                     if (tIndex == -1 || tIndex == myIndex) continue;
 
-                    let offset = 26;
-                    let lOffset = 0;
-                    if (games[gameId].pCount == 4) {
-                        offset = offsets[myIndex][tIndex];
-                        lOffset = lOffsets[myIndex][tIndex];
-                    }
-                    
+                    const offset = games[gameId].players.length == 2 ? 26 : (tIndex - myIndex) * 13;
                     // const offset = (myIndex - tIndex) * (games[gameId].players.length == 2 ? 26 : 13);
                     console.log(`Offset - ${offset}`);
 
                     let found = 0;
                     for (let c = 0; c < games[gameId].pieces[tIndex].length; c++) {
-                        if (myPos > 50 || myPos < 0) continue;
+                        if (myPos > 50) continue;
 
                         let place = games[gameId].pieces[tIndex][c];
                         console.log(`Place - ${place}`);
@@ -1369,21 +1349,9 @@ function onMove(socket, bid, pieceIndex) {
                         // place += offset;
                         // console.log(`Place after offset - ${place} /// ${myPos}`);
 
-                        if (games[gameId].pCount == 4) {
-                            if (place > lOffset) {
-                                if (place - lOffset == myPos) {
-                                    cutPiece = c;
-                                    found++;
-                                }
-                            } else if (place - offset == myPos) {
-                                cutPiece = c;
-                                found++;
-                            }
-                        } else {
-                            if (place - offset == myPos || place + offset == myPos) {
-                                cutPiece = c;
-                                found++;
-                            }
+                        if (place - offset == myPos || place + offset == myPos) {
+                            cutPiece = c;
+                            found++;
                         }
                     }
 
@@ -1454,7 +1422,7 @@ function onMove(socket, bid, pieceIndex) {
                             onDiceRoll(null, games[gameId].bid);
                         }, 1000 * functions.getRandomNumber(botTurnWait.min, botTurnWait.max));
                     }
-                }, games[gameId].lastOutcome * 130);
+                }, games[gameId].lastOutcome * 160);
                 //
             }
         }
