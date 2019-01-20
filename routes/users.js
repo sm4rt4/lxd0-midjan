@@ -480,19 +480,18 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
                 } else {
                     callback(null);
                 }
+            },
+            (callback) => {
+                if (reward > 0) {
+                    Prop.updateN('V', 500, callback);
+                } else {
+                    callback(null);
+                }
             }
         ], (err) => {
             if (err) return res.json({ success: false, error: err });
             
             return res.json({ success: true, reward });
-        });
-
-        User.getValues(aUser.phone, 'rewarded', (err, doc) => {
-            if (err) callback('Error getting daily reward');
-
-            else {
-
-            }
         });
     } catch (e) {
         console.log(e);
