@@ -481,7 +481,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
                     callback(null);
                 }
             },
-            (callback) => {
+            (_, callback) => {
                 if (reward > 0) {
                     Prop.updateN('V', 500, callback);
                 } else {
