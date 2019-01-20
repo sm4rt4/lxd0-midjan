@@ -1130,7 +1130,7 @@ function onDiceRoll(socket, bid) {
                             else if (games[gameId].pieces[myIndex][i] == -2) pDone++;
                         }
 
-                        const exCase = functions.getRandomNumber(1, 4);
+                        const exCase = functions.getRandomNumber(1, 7);
                         let appr = iAmSpecial ? [6, 6, 6, 1, 2, 3, 3, 4, 4, 5, 5, 1, 1, 3, 3, 6, 5, 1, 6, 4] : [1, 2, 3, 4, 4, 3, 2, 1, 5, 4, 5, 1, 2, 6];
                         if (exCase == 2) {
                             appr = iAmSpecial ? [1, 2, 2, 3, 4, 4, 5, 6, 1, 1] : [6, 6, 1, 2, 3, 4, 5, 2, 5, 6];
