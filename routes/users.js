@@ -478,7 +478,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
                         }
                     });
                 } else {
-                    callback(null);
+                    callback(null, {});
                 }
             },
             (_, callback) => {
