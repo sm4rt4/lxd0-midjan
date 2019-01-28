@@ -625,7 +625,7 @@ io.on('connection', (socket) => {
 
                                     if (gameFound && gameStarted) {
                                         const gameId = functions.getCurrentTime();
-                                        games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, -1, '');
+                                        games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, gameRequests[whichGame].specialIndex, -1, '');
                                         gameRequests.splice(whichGame, 1);
 
                                         for (let g = 0; g < games[gameId].players.length; g++) {
