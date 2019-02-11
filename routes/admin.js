@@ -562,7 +562,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 2nd referrer
-                            (callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     console.log(doc);
@@ -583,7 +583,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 3rd referrer
-                            (callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     console.log(doc);
@@ -603,7 +603,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 4th referrer
-                            (callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     if (doc.referrer == '-') callback('D');
@@ -621,7 +621,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 5th referrer
-                            (callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     if (doc.referrer == '-') callback('D');
