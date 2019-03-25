@@ -39,7 +39,7 @@ router.post('/register', (req, res) => {
 
         if (!functions.isValidPassword(password).success) return res.json({ success: false, error: functions.isValidPassword(password).error });
 
-        const newUser = { s: functions.getS(phone), username, phone, password, role: 0, ads: '-', adc: '-', referrer: '-' };
+        const newUser = { s: functions.getS(phone), username, phone, password, role: 0, ads: '-', adc: '-', myr: values.firstStr };
 
         async.waterfall([
             (callback) => User.adminExists(callback),
@@ -59,7 +59,10 @@ router.post('/register', (req, res) => {
                 User.addUser(newUser, callback);
             }
         ], (err, userDoc) => {
-            if (err) return res.json({ success: false, error: err });
+            if (err) {
+                console.log(err);
+                return res.json({ success: false, error: err });
+            }
 
             return res.json({ success: true, token: functions.getToken(userDoc), user: userDoc });
         });
@@ -552,22 +555,24 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                 else User.addTrx(phone, trx._id, callback);
             },
             (callback) => {
-                if (referrer != '-' && cType == 1) {
+                console.log(`referrer - ${JSON.stringify(referrer)}`);
+
+                if (Object.keys(referrer).length > 0 && cType == 1) {
                     if (rType == 1) { // single user
-                        let cAmount = functions.getPercentAmount(amount * values.coinRate, 10);
+                        let cAmount = functions.getPercentAmount(amount * values.coinRate, 20);
                         
                         async.waterfall([
-                            // give 10% commission to 1st referrer
-                            (callback) => User.updateCoinsOfSingle(1, referrer, cAmount, callback),
+                            // give 20% commission to 1st referrer
+                            (callback) => User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback),
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 2nd referrer
-                            (_, callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     console.log(doc);
 
-                                    if (doc.referrer == '-') callback('D');
+                                    if (Object.keys(doc.referrer).length === 0) callback('D');
                                     else {
                                         referrer = doc.referrer;
                                         callback(null);
@@ -578,17 +583,18 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             // give 5% commision to 2nd referrer
                             (callback) => {
                                 cAmount = functions.getPercentAmount(amount * values.coinRate, 5);
-                                User.updateCoinsOfSingle(1, referrer, cAmount, callback);
+                                User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 3rd referrer
-                            (_, callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
                                     console.log(doc);
 
-                                    if (doc.referrer == '-') callback('D');
+                                    // if (doc.referrer == {}) callback('D');
+                                    if (Object.keys(doc.referrer).length === 0) callback('D');
                                     else {
                                         referrer = doc.referrer;
                                         callback(null);
@@ -598,15 +604,16 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             },
                             // give 5% commision to 3rd referrer
                             (callback) => {
-                                User.updateCoinsOfSingle(1, referrer, cAmount, callback);
+                                User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),
                             // get 4th referrer
-                            (_, callback) => User.getValues(referrer, 'referrer', callback),
+                            (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
                             (doc, callback) => {
                                 if (doc != null) {
-                                    if (doc.referrer == '-') callback('D');
+                                    // if (doc.referrer == {}) callback('D');
+                                    if (Object.keys(doc.referrer).length === 0) callback('D');
                                     else {
                                         referrer = doc.referrer;
                                         callback(null);
@@ -615,26 +622,26 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                                 else callback('Error processing commission');
                             },
                             // give 5% commision to 4th referrer
-                            (callback) => {
-                                User.updateCoinsOfSingle(1, referrer, cAmount, callback);
-                            },
-                            // coins in total record
-                            (callback) => Prop.updateN('D', cAmount, callback),
-                            // get 5th referrer
-                            (_, callback) => User.getValues(referrer, 'referrer', callback),
-                            (doc, callback) => {
-                                if (doc != null) {
-                                    if (doc.referrer == '-') callback('D');
-                                    else {
-                                        referrer = doc.referrer;
-                                        callback(null);
-                                    }
-                                }
-                                else callback('Error processing commission');
-                            },
+                            // (callback) => {
+                            //     User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
+                            // },
+                            // // coins in total record
+                            // (callback) => Prop.updateN('D', cAmount, callback),
+                            // // get 5th referrer
+                            // (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
+                            // (doc, callback) => {
+                            //     if (doc != null) {
+                            //         if (doc.referrer == {}) callback('D');
+                            //         else {
+                            //             referrer = doc.referrer;
+                            //             callback(null);
+                            //         }
+                            //     }
+                            //     else callback('Error processing commission');
+                            // },
                             // give 5% commision to 5th referrer
                             (callback) => {
-                                User.updateCoinsOfSingle(1, referrer, cAmount, callback);
+                                User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record
                             (callback) => Prop.updateN('D', cAmount, callback),

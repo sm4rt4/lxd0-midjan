@@ -26,7 +26,7 @@ router.post('/register', (req, res) => {
 
         if (referrer == undefined || username == undefined || phone == undefined || password == undefined) return res.json({ success: false, error: 'Bad Request' });
 
-        if (referrer != '-' && !functions.isValidPhoneNumber(referrer).success) return res.json({ success: false, error: 'Invalid Referral Link' });
+        // if (referrer != '-' && !functions.isValidPhoneNumber(referrer).success) return res.json({ success: false, error: 'Invalid Referral Link' });
 
         if (!functions.isValidPhoneNumber(phone).success) return res.json({ success: false, error: functions.isValidPhoneNumber(phone).error });
 
@@ -38,16 +38,21 @@ router.post('/register', (req, res) => {
 
         if (adc == '') return res.json({ success: false, error: 'Invalid City' });
         
-        const newUser = { referrer, s: functions.getS(phone), username, phone, password, ads, adc };
+        const newUser = { s: functions.getS(phone), username, phone, password, ads, adc };
 
         async.waterfall([
             (callback) => {
-                if (referrer != '-') User.userExists(false, referrer, callback);
+                // if (referrer != '-') User.userExists(false, referrer, callback);
+                if (referrer != '') User.userWithRef(referrer, callback);
                 else callback(null, true);
             },
-            (exists, callback) => {
-                if (!exists) callback('Invalid Referral Link');
-                else callback(null);
+            (rfUser, callback) => {
+                // if (!exists) callback('Invalid Referral Link');
+                if (rfUser == undefined || rfUser == null) callback('Invalid Referral Code');
+                else {
+                    if (referrer != '') newUser.referrer = { phone: rfUser.phone, username: rfUser.username, code: referrer };
+                    callback(null);
+                }
             },
             (callback) => User.userExists(false, phone, callback),
             (exists, callback) => {
@@ -62,19 +67,47 @@ router.post('/register', (req, res) => {
                 Prop.updateN('V', 500, (err) => {
                     if (err) callback(err);
                     else {
-                        if (referrer != '-') {
+                        if (referrer != '') {
                             User.updateUnder(referrer, { username, phone }, (err) => {
-                                if (err) callback(err);
-                                else User.addUser(newUser, callback);
+                                if (err) callback('Error adding user');
+                                else {
+                                    Prop.get('ref', (err, propDoc) => {
+                                        if (err) callback('Error adding user');
+                                        else {
+                                            const newRef = functions.stringSuccessor(propDoc.s);
+                                            newUser.myr = newRef;
+
+                                            Prop.setS('ref', newRef, callback);
+                                        }
+                                    });
+                                    // User.addUser(newUser, callback);
+                                }
                             });
                         }
 
-                        else User.addUser(newUser, callback);
+                        else {
+                            Prop.get('ref', (err, propDoc) => {
+                                if (err) callback('Error adding user');
+                                else {
+                                    const newRef = functions.stringSuccessor(propDoc.s);
+                                    newUser.myr = newRef;
+
+                                    Prop.setS('ref', newRef, callback);
+                                }
+                            });
+                            // User.addUser(newUser, callback);
+                        }
                     }
                 });
             },
+            (_, callback) => User.addUser(newUser, callback)
         ], (err, userDoc) => {
+            if (err) console.log(`Error - ${err}`);
             if (err) return res.json({ success: false, error: err });
+
+            //
+            console.log(`userDoc - ${JSON.stringify(userDoc)}`);
+            //
 
             try {
                 fs.copySync(path.resolve(__dirname, '../public/userdata/'+functions.getRandomNumber(1, 9)+'.jpg'), path.resolve(__dirname, '../public/userdata/u'+phone+'.jpg'));
@@ -292,7 +325,7 @@ router.get('/withdraw', passport.authenticate('jwt', { session: false }), (req, 
         const phone = aUser.phone;
         const amt = aUser.coins / values.coinRate;
 
-        if (amt < 1000) return res.json({ success: false, error: 'Not enough coins' });
+        if (amt < 2500) return res.json({ success: false, error: 'Not enough coins' });
         
         async.waterfall([
             (callback) => User.updateCoins(phone, -aUser.coins, callback),
@@ -470,7 +503,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
             },
             (diff, callback) => {
                 if (diff >= 24) {
-                    reward = 500;
+                    reward = 250;
                     User.updateCoinsOfSingle(0, aUser.phone, reward, (err) => {
                         if (err) callback('Error processing reward');
                         else {
@@ -483,7 +516,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
             },
             (_, callback) => {
                 if (reward > 0) {
-                    Prop.updateN('V', 500, callback);
+                    Prop.updateN('V', 250, callback);
                 } else {
                     callback(null);
                 }

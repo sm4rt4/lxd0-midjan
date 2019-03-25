@@ -90,8 +90,8 @@ const Schema = mongoose.Schema({
         default: Date.now
     },
     referrer: {
-        type: String,
-        required: true
+        type: Object,
+        default: {}
     },
     under: {
         type: Array,
@@ -100,8 +100,12 @@ const Schema = mongoose.Schema({
     gw: {
         type: Number,
         default: 0
+    },
+    myr: {
+        type: String,
+        required: true
     }
-});
+}, { minimize: false });
 
 const User = module.exports = mongoose.model('User', Schema);
 
@@ -126,6 +130,21 @@ module.exports.userExists = (byUsername, value, callback) => {
 
         callback(null, doc !== null);
     });
+}
+
+module.exports.userWithRefExists = (myr, callback) => {
+    User.findOne({ myr }, (err, doc) => {
+        if (err) {
+            callback('Unknown Error');
+            return;
+        }
+
+        callback(null, doc !== null);
+    });
+}
+
+module.exports.userWithRef = (myr, callback) => {
+    User.findOne({ myr }, callback);
 }
 
 module.exports.adminExists = (callback) => {
@@ -225,7 +244,13 @@ module.exports.addTrx = (phone, trxId, callback) => User.updateOne({ phone }, { 
 });
 
 // add under
-module.exports.updateUnder = (phone, underData, callback) => User.updateOne({ phone }, { $push: { under: underData } }, (err, result) => {
+// module.exports.updateUnder = (phone, underData, callback) => User.updateOne({ phone }, { $push: { under: underData } }, (err, result) => {
+//     if (err || result.nModified != 1) callback('Error');
+//     else callback(null);
+// });
+
+// add under
+module.exports.updateUnder = (myr, underData, callback) => User.updateOne({ myr }, { $push: { under: underData } }, (err, result) => {
     if (err || result.nModified != 1) callback('Error');
     else callback(null);
 });
