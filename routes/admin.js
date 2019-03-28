@@ -543,7 +543,9 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
             },
             (callback) => {
                 if (rType == 0) User.updateCoinsOfAll(cType, amount * values.coinRate, callback);
-                else User.updateCoinsOfSingle(cType, phone, amount * values.coinRate, callback);
+                else User.updateCoinsOfSingleOnRecharge(cType, phone, amount * values.coinRate, callback);
+                // else User.updateCoinsOfSingleOnRecharge(cType, phone, amount * values.coinRate, callback);
+                //updateCoinsOfSingleOnRecharge
             },
             (callback) => Trx.add(trxData, callback),
             (doc, callback) => {
@@ -557,9 +559,9 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
             (callback) => {
                 console.log(`referrer - ${JSON.stringify(referrer)}`);
 
-                if (Object.keys(referrer).length > 0 && cType == 1) {
-                    if (rType == 1) { // single user
-                        let cAmount = functions.getPercentAmount(amount * values.coinRate, 20);
+                if (cType == 1) {
+                    if (rType == 1 && Object.keys(referrer).length > 0) { // single user
+                        let cAmount = functions.getPercentAmount(amount * values.coinRate, values.rechargeCommisions[0]);
                         
                         async.waterfall([
                             // give 20% commission to 1st referrer
@@ -582,7 +584,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             },
                             // give 5% commision to 2nd referrer
                             (callback) => {
-                                cAmount = functions.getPercentAmount(amount * values.coinRate, 5);
+                                cAmount = functions.getPercentAmount(amount * values.coinRate, values.rechargeCommisions[1]);
                                 User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record
@@ -604,6 +606,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                             },
                             // give 5% commision to 3rd referrer
                             (callback) => {
+                                cAmount = functions.getPercentAmount(amount * values.coinRate, values.rechargeCommisions[2]);
                                 User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record
@@ -622,25 +625,27 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
                                 else callback('Error processing commission');
                             },
                             // give 5% commision to 4th referrer
-                            // (callback) => {
-                            //     User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
-                            // },
-                            // // coins in total record
-                            // (callback) => Prop.updateN('D', cAmount, callback),
-                            // // get 5th referrer
-                            // (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
-                            // (doc, callback) => {
-                            //     if (doc != null) {
-                            //         if (doc.referrer == {}) callback('D');
-                            //         else {
-                            //             referrer = doc.referrer;
-                            //             callback(null);
-                            //         }
-                            //     }
-                            //     else callback('Error processing commission');
-                            // },
+                            (callback) => {
+                                cAmount = functions.getPercentAmount(amount * values.coinRate, values.rechargeCommisions[3]);
+                                User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
+                            },
+                            // coins in total record
+                            (callback) => Prop.updateN('D', cAmount, callback),
+                            // get 5th referrer
+                            (_, callback) => User.getValues(referrer.phone, 'referrer', callback),
+                            (doc, callback) => {
+                                if (doc != null) {
+                                    if (Object.keys(doc.referrer).length === 0) callback('D');
+                                    else {
+                                        referrer = doc.referrer;
+                                        callback(null);
+                                    }
+                                }
+                                else callback('Error processing commission');
+                            },
                             // give 5% commision to 5th referrer
                             (callback) => {
+                                cAmount = functions.getPercentAmount(amount * values.coinRate, values.rechargeCommisions[4]);
                                 User.updateCoinsOfSingle(1, referrer.phone, cAmount, callback);
                             },
                             // coins in total record

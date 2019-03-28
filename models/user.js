@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const values = require('../includes/values');
+const moment = require('moment');
 
 // User roles
 // 0 > Admin
@@ -101,9 +103,13 @@ const Schema = mongoose.Schema({
         type: Number,
         default: 0
     },
-    myr: {
+    myr: { // my refer code
         type: String,
         required: true
+    },
+    ldr: { // last diamonds recharge
+        type: Object,
+        default: {}
     }
 }, { minimize: false });
 
@@ -207,7 +213,31 @@ module.exports.updateSpecialCoins = (phone, amount, callback) => {
 // update coins of single player
 module.exports.updateCoinsOfSingle = (cType, phone, amount, callback) => {
     const incQuery =  cType == 0 ? { virt: amount } : { coins: amount };
-    User.updateOne({ phone }, { $inc: incQuery }, (err, result) => {
+    
+    // const yesterday = Date.now();
+    // yesterday.setDate(yesterday.getDate() - 1);
+
+    // const setQuery = cType == 0 ? {} : { ldr: { st: Date.now(), ti: yesterday, am: amount / values.coinRate } };
+
+    User.updateOne({ phone }, { /*$set: setQuery,*/ $inc: incQuery }, (err, result) => {
+        if (err || result.nModified != 1) callback('Error updating coins');
+        else callback(null);
+    });
+}
+
+// update coins of single player on RECHARGE
+module.exports.updateCoinsOfSingleOnRecharge = (cType, phone, amount, callback) => {
+    const incQuery =  cType == 0 ? { virt: amount } : { coins: amount };
+    
+    // const yesterday = Date.now();
+    // yesterday.setDate(yesterday.getDate() - 1);
+
+    const today = moment();
+    const yesterday = moment(today).subtract(1, 'days');
+
+    const setQuery = cType == 0 ? {} : { ldr: { st: today, ti: yesterday, am: amount / values.coinRate } };
+
+    User.updateOne({ phone }, { $set: setQuery, $inc: incQuery }, (err, result) => {
         if (err || result.nModified != 1) callback('Error updating coins');
         else callback(null);
     });
@@ -216,7 +246,13 @@ module.exports.updateCoinsOfSingle = (cType, phone, amount, callback) => {
 // update coins of all players
 module.exports.updateCoinsOfAll = (cType, amount, callback) => {
     const incQuery =  cType == 0 ? { virt: amount } : { coins: amount };
-    User.updateMany({ role: 2 }, { $inc: incQuery }, (err, result) => {
+
+    const today = moment();
+    const yesterday = moment(today).subtract(1, 'days');
+
+    const setQuery = cType == 0 ? {} : { ldr: { st: Date.now(), ti: yesterday, am: amount / values.coinRate } };
+
+    User.updateMany({ role: 2 }, { $set: setQuery, $inc: incQuery }, (err, result) => {
         if (err || result.ok != 1) callback('Error updating coins');
         else callback(null);
     });

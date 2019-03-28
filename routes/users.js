@@ -38,7 +38,7 @@ router.post('/register', (req, res) => {
 
         if (adc == '') return res.json({ success: false, error: 'Invalid City' });
         
-        const newUser = { s: functions.getS(phone), username, phone, password, ads, adc };
+        const newUser = { s: functions.getS(phone), username, phone, password, ads, adc, ldr: {} };
 
         async.waterfall([
             (callback) => {
@@ -488,43 +488,84 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
         if (aUser.role != 1 && aUser.role != 2) return res.json({ success: false, error: 'Bad Request' });
 
         let reward = 0;
+        let dimRewardAmount = 0;
         
         async.waterfall([
-            (callback) => User.getValues(aUser.phone, 'rewarded', callback),
+            (callback) => User.getValues(aUser.phone, 'rewarded ldr', callback),
             (userDoc, callback) => {
                 if (userDoc == null) callback('User not found');
 
-                const lastReward = moment(new Date(userDoc.rewarded));
                 const timeRn = moment(new Date());
-                const diff = timeRn.diff(lastReward, 'hours');
 
-                console.log(`Rewarded ${diff} hours ago`);
+                const lastReward = moment(new Date(userDoc.rewarded));
+                const diff = timeRn.diff(lastReward, 'hours');
+                console.log(`Coins Rewarded ${diff} hours ago`);
+            
+                if (Object.keys(userDoc.ldr).length > 0) {
+                    const dStartTime = userDoc.ldr.st;
+                    const dLastTime = userDoc.ldr.ti;
+
+                    const dbStartDiff = timeRn.diff(dStartTime, 'days');
+                    if (dbStartDiff < 100) {
+                        const dbLastDiff = timeRn.diff(dLastTime, 'hours');
+                        if (dbLastDiff >= 24) {
+                            dimRewardAmount = userDoc.ldr.am;
+                        }
+                    }
+                }
+
+                // const lastReward = moment(new Date(userDoc.rewarded));
+                // const diff = timeRn.diff(lastReward, 'hours');
+                // console.log(`Diamonds Rewarded ${diffInDs} hours ago`);
+                
                 callback(null, diff);
             },
             (diff, callback) => {
-                if (diff >= 24) {
-                    reward = 250;
-                    User.updateCoinsOfSingle(0, aUser.phone, reward, (err) => {
-                        if (err) callback('Error processing reward');
-                        else {
-                            User.updateOne({ phone: aUser.phone }, { $set: { rewarded: Date.now() } }, callback);
-                        }
-                    });
+                if (diff >= 24 || dimRewardAmount > 0) {
+                    if (diff >= 24) reward = 250;
+
+                    let setQuery = {};
+                    let incQuery = {};
+
+                    if (reward > 0) {
+                        setQuery.rewarded = Date.now();
+                        incQuery.virt = reward;
+                    } else if (dimRewardAmount > 0) {
+                        setQuery['ldr.ti'] = Date.now();
+                        incQuery.coins = dimRewardAmount;
+                    }
+                    
+                    User.updateOne({ phone: aUser.phone }, { $set: setQuery, $inc: incQuery }, callback);
                 } else {
                     callback(null, {});
                 }
             },
             (_, callback) => {
                 if (reward > 0) {
-                    Prop.updateN('V', 250, callback);
-                } else {
+                    Prop.updateN('V', 250, (err) => {
+                        if (err) callback(err);
+                        else if (dimRewardAmount > 0) Prop.updateN('D', dimRewardAmount, callback);
+                        else callback(null);
+                    });
+                }
+                
+                else if (dimRewardAmount > 0) Prop.updateN('D', dimRewardAmount, callback);
+                
+                else {
                     callback(null);
                 }
             }
         ], (err) => {
             if (err) return res.json({ success: false, error: err });
             
-            return res.json({ success: true, reward });
+            let msg = '';
+            if (reward > 0 && dimRewardAmount > 0) msg = `Daily Reward - ${dimRewardAmount} Diamonds & ${reward} Coins.`;
+            else if (reward > 0) msg = `Daily Reward - ${reward} Coins.`;
+            else if (dimRewardAmount > 0) msg = `Daily Reward - ${dimRewardAmount} Diamonds.`;
+
+            console.log(`msg => ${msg}`);
+
+            return res.json({ success: true, msg });
         });
     } catch (e) {
         console.log(e);
