@@ -361,7 +361,7 @@ io.on('connection', (socket) => {
                                                     const gameId = functions.getCurrentTime();
 
                                                     Prop.shouldBotWin((err, bTurn) => {
-                                                        if (err) callback('Error starting game');
+                                                        if (err) console.log('Error starting game');
                                                         else {
                                                             games[gameId] = new Game(gameRequests[index].players, pCount, cType, bet, gameRequests[index].specialIndex, botIndex, botS, bTurn);
                                                             gameRequests.splice(index, 1);
