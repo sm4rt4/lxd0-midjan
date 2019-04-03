@@ -1170,7 +1170,7 @@ function onDiceRoll(socket, bid) {
                     else if (games[gameId].botShouldWin != -1) {
                         console.log('special BOT case');
                         
-                        const iAmSpecial = (myIndex == games[gameId].botIndex && games[gameId].botShouldWin != 2) || (myIndex != games[gameId].botIndex && games[gameId].botShouldWin == 2);
+                        const iAmSpecial = (myIndex == games[gameId].botIndex && games[gameId].botShouldWin == 2) || (myIndex != games[gameId].botIndex && games[gameId].botShouldWin != 2);
                         console.log('special BOT case' + iAmSpecial);
 
 
