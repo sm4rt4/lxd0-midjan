@@ -472,7 +472,7 @@ router.post('/agent-recharge', passport.authenticate('jwt', { session: false }),
 
         if (!functions.isValidPhoneNumber(phone).success) return res.json({ success: false, error: functions.isValidPhoneNumber(phone).error });
 
-        if (isNaN(amount) || amount <= 0) return res.json({ success: false, error: 'Amount invalid' });
+        if (isNaN(amount) || amount == 0) return res.json({ success: false, error: 'Amount invalid' });
 
         const trxData = { sender: aUser.phone, receiver: phone, amount, type: 7 };
 
@@ -523,7 +523,7 @@ router.post('/recharge', passport.authenticate('jwt', { session: false }), (req,
         
         if (rType == 1 && !functions.isValidPhoneNumber(phone).success) return res.json({ success: false, error: functions.isValidPhoneNumber(phone).error });
 
-        if (isNaN(amount) || amount < 1) return res.json({ success: false, error: 'Amount invalid' });
+        if (isNaN(amount) || amount == 0) return res.json({ success: false, error: 'Amount invalid' });
 
         const trxData = { sender: aUser.phone, receiver: rType == 0 ? 'a' : phone, amount, type: cType == 1 ? 1 : 6 };
 
@@ -789,6 +789,50 @@ router.get('/props', passport.authenticate('jwt', { session: false }), (req, res
                 
                 return res.json({ success: true, props });
             }
+        });
+    } catch (e) {
+        console.log(e);
+        return res.json({ success: false, error: 'Bad Request' });
+    }
+});
+
+// get agents
+router.get('/blocked/:page', passport.authenticate('jwt', { session: false }), (req, res) => {
+    try {
+        const aUser = req.user;
+        
+        if (aUser.role != 0) return res.json({ success: false, error: 'Bad Request' });
+
+        let page = req.params.page;
+        if (page == undefined || isNaN(page)) page = 0;
+
+        User.getBlocked(page, (err, docs) => {
+            if (err) return res.json({ success: false, error: 'Bad Request' });
+            return res.json({ success: true, docs });
+        });
+    } catch (e) {
+        console.log(e);
+        return res.json({ success: false, error: 'Bad Request' });
+    }
+});
+
+// update agent status
+router.get('/blocked-update/:action/:phone', passport.authenticate('jwt', { session: false }), (req, res) => {
+    try {
+        const aUser = req.user;
+        
+        if (aUser.role != 0) return res.json({ success: false, error: 'Bad Request' });
+
+        const action = req.params.action;
+        if (action == undefined || (action != 'a' && action != 'r')) return res.json({ success: false, error: 'Bad Request' });
+        
+        const phone = req.params.phone;
+        if (phone == undefined || !functions.isValidPhoneNumber(phone).success) return res.json({ success: false, error: functions.isValidPhoneNumber(phone).error });
+        
+        User.updateBlocked(phone, action == 'a', (err) => {
+            if (err) return res.json({ success: false, error: err });
+
+            return res.json({ success: true });
         });
     } catch (e) {
         console.log(e);

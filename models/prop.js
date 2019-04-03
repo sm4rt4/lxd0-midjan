@@ -24,3 +24,18 @@ module.exports.updateN = (key, n, callback) => Prop.updateOne({ key }, { $inc: {
 module.exports.getMultiple = (keys, callback) => Prop.find({ key: { $in: keys } }, callback);
 
 module.exports.get = (key, callback) => Prop.findOne({ key }, callback);
+
+module.exports.shouldBotWin = (callback) => {
+    Prop.findOne({ key: 'bot' }, (err, doc) => {
+        if (err || doc == null) callback('Error');
+        else {
+            const newValue = doc.n <= 1 ? doc.n + 1 : 0;
+            Prop.updateOne({ key: 'bot' }, { n: newValue }, { upsert: true }, (err, _doc) => {
+                if (err || _doc == null) callback('Error');
+                else {
+                    callback(null, doc.n);
+                }
+            });
+        }
+    });
+}

@@ -119,11 +119,11 @@ module.exports.findByS = (s, callback) => User.findOne({ s }, callback);
 
 module.exports.getUserById = (id, callback) => User.findById(id, callback);
 
-module.exports.getAuthUser = (_id, password, callback) => User.findOne({ _id, password }, callback);
+module.exports.getAuthUser = (_id, password, callback) => User.findOne({ _id, password, blocked: false }, callback);
 
 // module.exports.getUserOnLogin = (u, password, callback) => User.findOne({ u, password }, callback);
 
-module.exports.getUser = (phone, callback) => User.findOne({ phone }, callback);
+module.exports.getUser = (phone, callback) => User.findOne({ phone, blocked: false }, callback);
 
 module.exports.userExists = (byUsername, value, callback) => {
     const query = byUsername ? { u: value } : { phone: value };
@@ -237,8 +237,11 @@ module.exports.updateCoinsOfSingleOnRecharge = (cType, phone, amount, callback) 
 
     const setQuery = cType == 0 ? {} : { ldr: { st: today, ti: yesterday, am: amount / values.coinRate } };
 
-    User.updateOne({ phone }, { $set: setQuery, $inc: incQuery }, (err, result) => {
-        if (err || result.nModified != 1) callback('Error updating coins');
+    User.updateOne({ phone }, cType == 0 ? { $inc: incQuery } : { $set: setQuery, $inc: incQuery }, (err, result) => {
+        if (err || result.nModified != 1) {
+            console.log(`Err - ${err}`);
+            callback('Error updating coins');
+        }
         else callback(null);
     });
 }
@@ -252,7 +255,7 @@ module.exports.updateCoinsOfAll = (cType, amount, callback) => {
 
     const setQuery = cType == 0 ? {} : { ldr: { st: Date.now(), ti: yesterday, am: amount / values.coinRate } };
 
-    User.updateMany({ role: 2 }, { $set: setQuery, $inc: incQuery }, (err, result) => {
+    User.updateMany({ role: 2 }, cType == 0 ? { $inc: incQuery } : { $set: setQuery, $inc: incQuery }, (err, result) => {
         if (err || result.ok != 1) callback('Error updating coins');
         else callback(null);
     });
@@ -361,5 +364,14 @@ module.exports.addGame = (phone, gId, callback) => User.updateOne({ phone }, { $
 // add local game
 module.exports.addLocalGame = (phone, gId, callback) => User.updateOne({ phone }, { $push: { localGames: gId } }, (err, result) => {
     if (err || result.nModified != 1) callback('Error updating games');
+    else callback(null);
+});
+
+// get agents
+module.exports.getBlocked = (page, callback) => User.find({ blocked: true }).sort({ 'username': 1 }).skip(page * 50).limit(50).exec(callback);
+
+// update agent status
+module.exports.updateBlocked = (phone, blocked, callback) => User.updateOne({ phone }, { $set: { blocked } }, (err, result) => {
+    if (err || result.nModified != 1) callback('Error updating user status');
     else callback(null);
 });

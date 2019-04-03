@@ -7,4 +7,5 @@ module.exports = {
     coinRate: 100, // was 1000 before
     firstStr: 'c2b4z',
     //db.props.insertOne({key: 'ref', s: 'c2b4z'})
+    //db.props.insertOne({key: 'bot', n: 0})
 };

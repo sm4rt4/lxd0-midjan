@@ -11,6 +11,7 @@ const passport = require('passport');
 const async = require('async');
 const User = require('./models/user');
 const GameModel = require('./models/game');
+const Prop = require('./models/prop');
 
 mongoose.connect(values.databaseUrl, {
     useNewUrlParser: true
@@ -54,7 +55,7 @@ app.get('*', (_, res) => {
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const betKinds = [ 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 50000000, 1000000000 ];
+const betKinds = [ 100, /**/ 200, 300, 400, /**/ 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 50000000, 1000000000 ];
 const botTurnWait = {
     min: 1,
     max: 2
@@ -267,7 +268,8 @@ io.on('connection', (socket) => {
                                 socket.emit('gid', tempId);
 
                                 //
-                                if (cType == 0 && bet >= 100 && bet <= 1000) {
+                                // if (cType == 0 && bet >= 100 && bet <= 1000) {
+                                if (bet >= 100 && bet <= 1000) {
                                     const ival = setInterval(() => {
                                         for (let index = 0; index < gameRequests.length; index++) {
                                             if (gameRequests[index].tempId == tempId) {
@@ -357,15 +359,20 @@ io.on('connection', (socket) => {
                                                     }
         
                                                     const gameId = functions.getCurrentTime();
-        
-                                                    games[gameId] = new Game(gameRequests[index].players, pCount, cType, bet, gameRequests[index].specialIndex, botIndex, botS);
-                                                    gameRequests.splice(index, 1);
-        
-                                                    for (let g = 0; g < games[gameId].players.length; g++) {
-                                                        players[games[gameId].players[g]].game.gameId = gameId;
-                                                    }
-        
-                                                    setStartTimer(gameId, 5000);
+
+                                                    Prop.shouldBotWin((err, bTurn) => {
+                                                        if (err) callback('Error starting game');
+                                                        else {
+                                                            games[gameId] = new Game(gameRequests[index].players, pCount, cType, bet, gameRequests[index].specialIndex, botIndex, botS, bTurn);
+                                                            gameRequests.splice(index, 1);
+                
+                                                            for (let g = 0; g < games[gameId].players.length; g++) {
+                                                                players[games[gameId].players[g]].game.gameId = gameId;
+                                                            }
+                
+                                                            setStartTimer(gameId, 5000);
+                                                        }
+                                                    });
                                                 }
                                             }
                                         }
@@ -375,7 +382,7 @@ io.on('connection', (socket) => {
                             } else if (gameFound && gameStarted) {
                                 const gameId = functions.getCurrentTime();
 
-                                games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, gameRequests[whichGame].specialIndex, -1, '');
+                                games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, gameRequests[whichGame].specialIndex, -1, '', -1);
                                 gameRequests.splice(whichGame, 1);
 
                                 for (let g = 0; g < games[gameId].players.length; g++) {
@@ -625,7 +632,7 @@ io.on('connection', (socket) => {
 
                                     if (gameFound && gameStarted) {
                                         const gameId = functions.getCurrentTime();
-                                        games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, gameRequests[whichGame].specialIndex, -1, '');
+                                        games[gameId] = new Game(gameRequests[whichGame].players, pCount, cType, bet, gameRequests[whichGame].specialIndex, -1, '', -1);
                                         gameRequests.splice(whichGame, 1);
 
                                         for (let g = 0; g < games[gameId].players.length; g++) {
@@ -1157,7 +1164,56 @@ function onDiceRoll(socket, bid) {
                         }
 
                         randomOutcome = appr[functions.getRandomNumber(0, appr.length - 1)];
-                    } else {
+                    }
+
+                    // bot special
+                    else if (games[gameId].botShouldWin != -1) {
+                        console.log('special BOT case');
+                        
+                        const iAmSpecial = (myIndex == games[gameId].botIndex && games[gameId].botShouldWin != 2) || (myIndex != games[gameId].botIndex && games[gameId].botShouldWin == 2);
+                        console.log('special BOT case' + iAmSpecial);
+
+
+                        let yet_to_open = 0;
+                        let very_close = 0;
+                        let pDone = 0;
+
+                        for (let i = 0; i < games[gameId].pieces[myIndex].length; i++) {
+                            if (games[gameId].pieces[myIndex][i] == -1) yet_to_open++;
+                            else if (games[gameId].pieces[myIndex][i] > 50) very_close++;
+                            else if (games[gameId].pieces[myIndex][i] == -2) pDone++;
+                        }
+
+                        const exCase = functions.getRandomNumber(1, 7);
+                        let appr = iAmSpecial ? [6, 6, 6, 1, 2, 3, 3, 4, 4, 5, 5, 1, 1, 3, 3, 6, 5, 1, 6, 4] : [1, 2, 3, 4, 4, 3, 2, 1, 5, 4, 5, 1, 2, 6];
+                        if (exCase == 2) {
+                            appr = iAmSpecial ? [1, 2, 2, 3, 4, 4, 5, 6, 1, 1] : [6, 6, 1, 2, 3, 4, 5, 2, 5, 6];
+                        } else if (very_close > 1) {
+                            appr = iAmSpecial ? [1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 1, 2, 5, 5, 6, 1] : [6, 5, 1, 2, 6, 6, 3, 4, 5, 5, 6, 6, 6, 5, 1];
+                        } else if (yet_to_open > 2) {
+                            console.log('TC');
+                            appr = [6, 6, 6, 1, 2, 3, 4, 5, 3, 4, 6, 6];
+                        }
+
+                        if (!iAmSpecial && pDone == 3) {
+                            appr = [1, 2, 3, 4, 5, 6];
+
+                            for (let i = 0; i < games[gameId].pieces[myIndex].length; i++) {
+                                if (games[gameId].pieces[myIndex][i] != -2) {
+                                    const gap = 56 - games[gameId].pieces[myIndex][i];
+                                    if (appr.indexOf(gap) >= 0) {
+                                        appr.splice(appr.indexOf(gap), 1);
+                                    }
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        randomOutcome = appr[functions.getRandomNumber(0, appr.length - 1)];
+                    }
+
+                    else {
                         // ease in sixes
                         let yet_to_open = 0;
 
@@ -1499,7 +1555,7 @@ class Player {
 let games = {};
 let gameRequests = [];
 class Game {
-    constructor(players, pCount, cType, bet, specialIndex, botIndex, bid) {
+    constructor(players, pCount, cType, bet, specialIndex, botIndex, bid, botShouldWin) {
         this.players = players;
         this.pCount = pCount;
         this.cType = cType;
@@ -1525,7 +1581,10 @@ class Game {
         this.botIndex = botIndex;
         this.bid = bid;
 
+        this.botShouldWin = botShouldWin;
+
         console.log(`Special ${specialIndex}`);
+        console.log(`botShouldWin ${botShouldWin}`);
 
         // if (specialIndex != -1) console.log(`UnFair Game ${players[this.players[specialIndex]].username} shall win`);
         // else console.log('Fair Game');
@@ -1562,7 +1621,7 @@ class Game {
                                 if (!isNaN(phone)) User.addGame(phone, this.dbId, callback);
                                 else callback(null);
                             }, (err) => {
-                                console.log(err);
+                                if (err) console.log(err);
                             });
                         }
                     });
