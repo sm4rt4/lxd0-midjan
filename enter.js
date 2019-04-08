@@ -55,7 +55,8 @@ app.get('*', (_, res) => {
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const betKinds = [ 100, /**/ 200, 300, 400, /**/ 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 50000000, 1000000000 ];
+// const betKinds = [ 100, /**/ 200, 300, 400, /**/ 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 50000000, 1000000000 ];
+const betKinds = [ 1, 2, 3, 4, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 500000, 10000000 ];
 const botTurnWait = {
     min: 1,
     max: 2
@@ -269,7 +270,7 @@ io.on('connection', (socket) => {
 
                                 //
                                 // if (cType == 0 && bet >= 100 && bet <= 1000) {
-                                if (bet >= 100 && bet <= 1000) {
+                                if (bet >= 1 && bet <= 10) {
                                     const ival = setInterval(() => {
                                         for (let index = 0; index < gameRequests.length; index++) {
                                             if (gameRequests[index].tempId == tempId) {

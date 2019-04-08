@@ -64,7 +64,7 @@ router.post('/register', (req, res) => {
             (hash, callback) => {
                 newUser.password = hash;
 
-                Prop.updateN('V', 500, (err) => {
+                Prop.updateN('V', values.startingFreeCoins, (err) => {
                     if (err) callback(err);
                     else {
                         if (referrer != '') {
@@ -522,7 +522,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
             },
             (diff, callback) => {
                 if (diff >= 24 || dimRewardAmount > 0) {
-                    if (diff >= 24) reward = 250;
+                    if (diff >= 24) reward = values.dailyFreeCoins * values.coinRate;
 
                     let setQuery = {};
                     let incQuery = {};
@@ -542,7 +542,7 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
             },
             (_, callback) => {
                 if (reward > 0) {
-                    Prop.updateN('V', 250, (err) => {
+                    Prop.updateN('V', values.dailyFreeCoins * values.coinRate, (err) => {
                         if (err) callback(err);
                         else if (dimRewardAmount > 0) Prop.updateN('D', dimRewardAmount, callback);
                         else callback(null);
