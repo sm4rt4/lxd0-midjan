@@ -47,7 +47,7 @@ const Schema = mongoose.Schema({
         type: Number,
         default: 500
     },
-    sc: {
+    sc: { // special coins
         type: Number,
         default: 0
     },

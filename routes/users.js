@@ -506,10 +506,10 @@ router.get('/daily-reward', passport.authenticate('jwt', { session: false }), (r
                     const dLastTime = userDoc.ldr.ti;
 
                     const dbStartDiff = timeRn.diff(dStartTime, 'days');
-                    if (dbStartDiff < 100) {
+                    if (dbStartDiff < values.dimDays) {
                         const dbLastDiff = timeRn.diff(dLastTime, 'hours');
                         if (dbLastDiff >= 24) {
-                            dimRewardAmount = userDoc.ldr.am;
+                            dimRewardAmount = userDoc.ldr.am / values.dimDays;
                         }
                     }
                 }
